@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Moonlit Tarot · เปิดไพ่ทาโรต์ 78 ใบ</title>
-<meta name="description" content="ตั้งคำถามในใจ สับไพ่ทาโรต์ 78 ใบ แล้วเลือกเปิด 1 ใบหรือ 3 ใบ พร้อมภาพไพ่และความหมายภาษาไทย">
+<meta name="description" content="ตั้งคำถามในใจ สับไพ่ทาโรต์ 78 ใบ แล้วเลือกเปิด 1 ใบ, 3 ใบ, Celtic Cross 10 ใบ หรือ 12 เดือน พร้อมภาพไพ่และความหมายภาษาไทย">
 <meta name="theme-color" content="#101422">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23101422'/%3E%3Cpath d='M22 6a11 11 0 1 0 4 17A10 10 0 0 1 22 6' fill='%23e6c48e'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
@@ -14,9 +14,17 @@
 <header><a class="brand" href="./" aria-label="Moonlit Tarot หน้าหลัก"><span class="brand-symbol">☾</span><span>MOONLIT <b>TAROT</b></span></a><span class="deck-note">THE COMPLETE DECK <span>78 ใบ</span></span></header>
 <main>
 <div class="intro"><div class="eyebrow">A MOMENT FOR YOURSELF</div><h1>คืนนี้ ไพ่มีอะไรอยากบอกคุณ</h1><p>ตั้งคำถามในใจ แล้วให้ไพ่เป็นพื้นที่เล็ก ๆ สำหรับการทบทวน</p></div>
-<div class="mode" role="group" aria-label="จำนวนไพ่"><button type="button" data-count="1" aria-pressed="true"><span class="mode-icon">Ⅰ</span> เปิด 1 ใบ <small>ข้อความสำหรับคุณ</small></button><button type="button" data-count="3" aria-pressed="false"><span class="mode-icon">Ⅲ</span> เปิด 3 ใบ <small>อดีต · ปัจจุบัน · แนวโน้ม</small></button></div>
+
+<div class="mode" role="group" aria-label="จำนวนไพ่">
+  <button type="button" data-count="1" aria-pressed="true"><span class="mode-icon">Ⅰ</span> เปิด 1 ใบ <small>ข้อความสำหรับคุณ</small></button>
+  <button type="button" data-count="3" aria-pressed="false"><span class="mode-icon">Ⅲ</span> เปิด 3 ใบ <small>อดีต · ปัจจุบัน · แนวโน้ม</small></button>
+  <button type="button" data-count="10" aria-pressed="false"><span class="mode-icon">Ⅹ</span> เปิด 10 ใบ <small>ผังอายุ · วงจรชีวิต</small></button>
+  <button type="button" data-count="12" aria-pressed="false"><span class="mode-icon">Ⅻ</span> เปิด 12 ใบ <small>จักรราศี · 12 เรือนชีวิต</small></button>
+</div>
+
 <div class="table-top"><span class="fine-line"></span><span id="spread-title">ONE-CARD READING</span><span class="fine-line"></span></div>
-<section id="cards" class="cards" aria-label="ไพ่ที่เลือก"></section>
+<section id="cards" class="cards one" aria-label="ไพ่ที่เลือก"></section>
+
 <div class="actions"><p id="status" role="status" aria-live="polite">หายใจเข้าลึก ๆ แล้วกดสับไพ่เมื่อพร้อม</p><button id="shuffle" class="shuffle" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7h3c5 0 7 10 12 10h3m-4-4 4 4-4 4M3 17h3c2 0 3.4-1.5 5-4M13 9c1.6-2 3-2 5-2h3m-4-4 4 4-4 4"/></svg><span>สับไพ่</span></button><div class="deck-caption">78 ใบ <span>✦</span> เปิดไพ่ตั้งตรง</div></div>
 <section id="reading" class="reading" aria-label="ความหมายของไพ่" hidden></section>
 </main>
