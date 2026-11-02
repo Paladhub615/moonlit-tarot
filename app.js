@@ -23,6 +23,84 @@ let activeDetailIndex=-1, returnFocus=null;
 // Build popup-20261102-b: tap a face-up card to read it.
 
 let count=1, phase='idle', drawn=[], revealed=new Set();
+function newReadingId(){
+  if(crypto.randomUUID)return crypto.randomUUID();
+  const b=crypto.getRandomValues(new Uint8Array(16));b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;
+  const h=[...b].map(n=>n.toString(16).padStart(2,'0')).join('');
+  return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`;
+}
+let readingId=newReadingId(), spreadCharged=false, chargeInProgress=false;
+let savedLang='th';try{savedLang=localStorage.getItem('moonlit_language')||'th';}catch{};window.MoonlitLang=savedLang==='en'?'en':'th';
+const isEnglish=()=>window.MoonlitLang==='en';
+const LL=(th,en)=>isEnglish()?en:th;
+const enZodiacPositions=['Self · 1st House','Finances · 2nd House','Communication · 3rd House','Home · 4th House','Creativity · 5th House','Challenges · 6th House','Partnerships · 7th House','Transformation · 8th House','Learning · 9th House','Career · 10th House','Fortune · 11th House','Hidden matters · 12th House'];
+const enZodiacShort=['Self','Money','Nearby','Home','Creation','Challenges','Partners','Loss','Far away','Career','Luck','Hidden'];
+const enZodiacDetails=[
+'Identity, birth, personality, subconscious patterns, personal strengths, weaknesses, environment and self-confidence.',
+'Income, resources, money habits, possessions, personal tastes, collecting and eating.',
+'Neighbors, siblings, short trips, communication, vehicles, phones and early education.',
+'Family background, birthplace, mother, childhood upbringing and its influence today.',
+'Investments, speculation, stocks, competition, sport, entertainment, romance and dating.',
+'Challenges, colleagues and staff, pets, health concerns, daily problems and leaving a job.',
+'Partners, spouses, contracts, bosses, open rivals and direct opponents.',
+'Loss, endings, damage, illness, hospitals, shared assets, inheritance and difficult changes.',
+'Long journeys, foreign countries, spiritual beliefs, teachers, university and specialist training.',
+'Career, public life, father, coworkers, achievements, reputation, business and social image.',
+'Gifts, opportunities, helpful groups, associations and unexpected good fortune.',
+'Secrets, solitude, confinement, private fears, hidden opposition and what we do not show.'
+];
+const enThree=['Past','Present','Potential'];
+function cardCopy(card){
+ if(!isEnglish()) return card;
+ const translation=window.MOONLIT_EN_CARDS?.[CARDS.indexOf(card)];
+ return {...card,thai:'',keywords:translation?.keywords||'',meaning:translation?.meaning||'',group:card.group};
+}
+const uiLabels={
+  hero:['คืนนี้ ไพ่มีอะไรอยากบอกคุณ','What do the cards have to tell you tonight?'],
+  intro:['ตั้งคำถามในใจ แล้วให้ไพ่เป็นพื้นที่เล็ก ๆ สำหรับการทบทวน','Hold a question in mind. Let the cards offer a moment for reflection.'],
+  mode1:['เปิด 1 ใบ','1 Card'],mode1s:['ข้อความสำหรับคุณ','A message for you'],
+  mode3:['เปิด 3 ใบ','3 Cards'],mode3s:['อดีต · ปัจจุบัน · แนวโน้ม','Past · Present · Potential'],
+  mode10:['เปิด 10 ใบ','10 Cards'],mode10s:['ผังอายุ · วงจรชีวิต','Life cycles · Age spread'],
+  mode12:['เปิด 12 ใบ','12 Cards'],mode12s:['จักรราศี · 12 เรือนชีวิต','Astrological · 12 Houses'],
+  deckcaption:['78 ใบ ✦ เปิดไพ่ตั้งตรง','78 cards ✦ Upright readings'],
+  interpretation:['ความหมายไพ่','Card interpretation'],prev:['← ใบก่อนหน้า','← Previous'],next:['ใบถัดไป →','Next →'],
+  disclaimer:['สำหรับความบันเทิงและการทบทวนใจ ไม่ใช่คำทำนายที่แน่นอน','For entertainment and personal reflection, not guaranteed predictions.'],
+  chat:['แชทกับแม่หมอ','Live reader'],
+  loginTitle:['เข้าสู่ระบบ Moonlit','Sign in to Moonlit'],authHint:['สมัครบัญชีเพื่อรับเครดิตฟรี 5 ครั้ง (ครั้งเดียวต่อบัญชี)','Create an account for 5 free readings (one-time welcome bonus).'],
+  signin:['เข้าสู่ระบบ','Sign in'],signup:['สมัครสมาชิก','Create account'],email:['อีเมล','Email'],password:['รหัสผ่าน (อย่างน้อย 6 ตัว)','Password (min. 6 characters)'],
+  creditTitle:['เครดิตการเปิดไพ่','Reading credits'],creditsUnit:['เครดิต','credits'],
+  creditHint:['สมาชิกใหม่ได้ 5 ครั้งฟรี · เปิด 1 รอบใช้ 1 เครดิต ไม่ว่าจะวางกี่ใบ · หักเมื่อพลิกใบแรก','New members get 5 free readings. One spread costs 1 credit, regardless of card count. Charged on first flip.'],
+  priceSoon:['เปิดราคาเร็ว ๆ นี้','Pricing coming soon'],manualTopup:['ระบบชำระเงินอัตโนมัติยังไม่เปิดใช้งาน ติดต่อแม่หมอเพื่อสอบถามการเติมเครดิต (ตรวจสอบยอดก่อนเพิ่มเครดิต)','Automatic checkout is not live yet. Contact the reader for manual credit top-ups after payment verification.'],
+  contactReader:['ติดต่อแม่หมอ','Contact reader'],chatTitle:['พูดคุยกับแม่หมอ ☾','Chat with a real reader ☾'],
+  welcomePolicy:['ทักทายและสอบถามบริการได้ฟรี · คำอ่านดวงส่วนตัวแบบชำระเงินยังไม่เปิดอัตโนมัติ · แม่หมอตอบด้วยตัวเองเมื่อออนไลน์','Greetings and service questions are free. Paid personal readings are not auto-activated; a real human replies when available.'],
+  inbox:['กล่องข้อความลูกค้า','Customer inbox'],reload:['รีเฟรช','Refresh'],customerId:['รหัสบัญชีลูกค้า','Customer ID'],topupAmount:['จำนวนเครดิต','Credits'],
+  grant:['เพิ่มเครดิตหลังตรวจยอด','Grant after verification'],reopenRoom:['เปิดห้องแชท','Open chat'],closeRoom:['ปิดห้องแชท','Close chat'],imageCredit:['ภาพ Rider–Waite–Smith · Pamela Colman Smith, 1909 ·','Rider–Waite–Smith art · Pamela Colman Smith, 1909 ·'],imageSource:['ที่มาภาพไพ่','Image source'],startChat:['เข้าสู่ระบบเพื่อเริ่มแชท','Sign in to start chatting'],chatInput:['ข้อความ','Message'],send:['ส่ง','Send']
+};
+function updateLangUI(){
+ document.documentElement.lang=isEnglish()?'en':'th';
+ document.querySelectorAll('[data-i18n]').forEach(el=>{let words=uiLabels[el.dataset.i18n];if(words)el.textContent=words[isEnglish()?1:0];});
+ document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===window.MoonlitLang)));
+ document.getElementById('spread-title').textContent=currentSpread().title;
+ [...slots.children].forEach((slot,i)=>{
+   const label=count===10?String(i+1):count===12?(isEnglish()?enZodiacShort[i]:zodiacShortLabels[i]):positionName(i);
+   const labelEl=slot.querySelector('.position-label');if(labelEl)labelEl.textContent=count===1?'':label;
+   const hint=slot.querySelector('.card-hint');
+   if(hint) hint.textContent=(!revealed.has(i) ? (phase==='ready'||phase==='revealed'?LL('แตะเพื่อเปิดไพ่','Tap to reveal'):count===1?LL('ไพ่ของคุณ','Your card'):count===10?'':LL(`ใบที่ ${i+1}`,`Card ${i+1}`)):(count>=10?LL('แตะอีกครั้งเพื่ออ่าน','Tap again to read'):drawn[i]?.name||''));
+ });
+ if(detailDialog.open && activeDetailIndex>=0)updateCardDetail(activeDetailIndex);
+ if(!reading.hidden)renderReading();
+ const sb=shuffleButton.querySelector('span');
+ sb.textContent=phase==='shuffling'?LL('กำลังสับไพ่…','Shuffling…'):phase==='idle'?LL('สับไพ่','Shuffle'):LL('สับไพ่ใหม่','Shuffle again');
+ statusText.textContent=phase==='idle'?LL('หายใจเข้าลึก ๆ แล้วกดสับไพ่เมื่อพร้อม','Take a moment and shuffle when ready'):
+   phase==='shuffling'?LL('กำลังสับไพ่…','Shuffling…'):
+   revealed.size===count?LL('เปิดครบแล้ว · แตะไพ่เพื่ออ่าน','All cards revealed · Tap a card to read'):
+   LL(`เปิดแล้ว ${revealed.size}/${count} ใบ · แตะไพ่เพื่ออ่าน`,`Revealed ${revealed.size}/${count} · Tap a card to read`);
+}
+window.setMoonlitLanguage=code=>{
+ window.MoonlitLang=code==='en'?'en':'th';try{localStorage.setItem('moonlit_language',window.MoonlitLang);}catch{}updateLangUI();
+ window.dispatchEvent(new Event('moonlit:language'));
+};
+
 
 const agePositions=[
   'อายุ 10–14, 20–26',
@@ -89,11 +167,11 @@ function currentSpread(){
 }
 
 function positionName(i){
-  return currentSpread().positions[i] || `ใบที่ ${i+1}`;
+  return count===3?(isEnglish()?enThree[i]:threePositions[i]):count===12?(isEnglish()?enZodiacPositions[i]:zodiacPositions[i]):count===1?LL('ข้อความสำหรับคุณ','Your message'):LL(`ตำแหน่งที่ ${i+1}`,`Position ${i+1}`);
 }
 
 function positionDetail(i){
-  return count===12 ? zodiacDetails[i] : '';
+  return count===12 ? (isEnglish()?enZodiacDetails[i]:zodiacDetails[i]) : '';
 }
 
 function closeCardDetail(){
@@ -114,21 +192,23 @@ function updateCardDetail(i){
   const navIndex=opened.indexOf(i);
   activeDetailIndex=i;
   detailPosition.textContent=count===10
-    ?`ตำแหน่งที่ ${i+1} · ผังอายุ`
-    :count===12?`เรือนที่ ${i+1} · ${zodiacPositions[i]}`
+    ?LL(`ตำแหน่งที่ ${i+1} · ผังอายุ`,`Position ${i+1} · Life age spread`)
+    :count===12?LL(`เรือนที่ ${i+1} · ${zodiacPositions[i]}`,`House ${i+1} · ${enZodiacPositions[i]}`)
     :positionName(i);
+  const display=cardCopy(card);
   detailName.textContent=card.name;
-  detailThai.textContent=card.thai;
+  detailThai.textContent=display.thai;
+  detailThai.hidden=isEnglish();
   detailCaption.textContent=card.group;
-  detailKeywords.textContent=card.keywords||'';
-  detailMeaning.textContent=card.meaning||'ยังไม่มีคำอธิบายสำหรับไพ่ใบนี้';
+  detailKeywords.textContent=display.keywords||'';
+  detailMeaning.textContent=display.meaning||LL('ยังไม่มีคำอธิบายสำหรับไพ่ใบนี้','No interpretation available yet');
 
   if(count===10){
     detailContext.hidden=false;
-    detailContext.textContent=`ช่วงอายุที่เกี่ยวข้อง: ${agePositions[i]}`;
+    detailContext.textContent=LL(`ช่วงอายุที่เกี่ยวข้อง: ${agePositions[i]}`,`Related ages: ${agePositions[i].replace('อายุ ','')}`);
   }else if(count===12){
     detailContext.hidden=false;
-    detailContext.textContent=`ขอบเขตของเรือน: ${zodiacDetails[i]}`;
+    detailContext.textContent=LL(`ขอบเขตของเรือน: ${zodiacDetails[i]}`,`House themes: ${enZodiacDetails[i]}`);
   }else{
     detailContext.hidden=true;
     detailContext.textContent='';
@@ -146,7 +226,7 @@ function updateCardDetail(i){
 
   detailPrev.disabled=navIndex<=0;
   detailNext.disabled=navIndex>=opened.length-1;
-  detailCounter.textContent=`ใบที่ ${i+1} · เปิดแล้ว ${opened.length}/${count}`;
+  detailCounter.textContent=LL(`ใบที่ ${i+1} · เปิดแล้ว ${opened.length}/${count}`,`Card ${i+1} · Revealed ${opened.length}/${count}`);
 }
 
 function openCardDetail(i){
@@ -196,7 +276,7 @@ function renderSlots(){
   for(let i=0;i<count;i++){
     const slot=document.createElement('div');
     slot.className=`card-slot pos-${i+1}`;
-    const label=count===1?'':(count===10?String(i+1):count===12?zodiacShortLabels[i]:positionName(i));
+    const label=count===1?'':(count===10?String(i+1):count===12?(isEnglish()?enZodiacShort[i]:zodiacShortLabels[i]):positionName(i));
     const detail='';
 
     slot.innerHTML=`
@@ -214,7 +294,7 @@ function renderSlots(){
           <span class="face front"></span>
         </span>
       </button>
-      <div class="card-hint">${count===1?'ไพ่ของคุณ':count===10?'':`ใบที่ ${i+1}`}</div>`;
+      <div class="card-hint">${count===1?LL('ไพ่ของคุณ','Your card'):count===10?'':LL(`ใบที่ ${i+1}`,`Card ${i+1}`)}</div>`;
 
     slot.querySelector('button').addEventListener('click',()=>revealCard(i));
     slots.append(slot);
@@ -225,19 +305,21 @@ function renderSlots(){
 }
 
 function setCount(next){
-  if(phase==='shuffling') return false;
+  if(phase==='shuffling'||chargeInProgress) return false;
+  if(next!==count && spreadCharged && revealed.size<count && !confirm(LL('กำลังเปลี่ยนชุดไพ่ก่อนเปิดครบ เครดิตที่ใช้ไปจะไม่คืน ยืนยันไหม?','You are leaving an unfinished reading. The credit already used will not be refunded. Continue?')))return false;
   closeCardDetail();
   if(![1,3,10,12].includes(next)) throw new Error('เลือกได้เฉพาะ 1, 3, 10 หรือ 12 ใบ');
 
   count=next;
+  readingId=newReadingId();spreadCharged=false;chargeInProgress=false;
   phase='idle';
   drawn=[];
   revealed.clear();
 
   modeButtons.forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.count)===count)));
   document.getElementById('spread-title').textContent=currentSpread().title;
-  statusText.textContent='หายใจเข้าลึก ๆ แล้วกดสับไพ่เมื่อพร้อม';
-  shuffleButton.querySelector('span').textContent='สับไพ่';
+  statusText.textContent=LL('หายใจเข้าลึก ๆ แล้วกดสับไพ่เมื่อพร้อม','Take a moment and shuffle when ready');
+  shuffleButton.querySelector('span').textContent=LL('สับไพ่','Shuffle');
   renderSlots();
   return true;
 }
@@ -259,18 +341,20 @@ function drawDeck(){
 }
 
 async function shuffle(){
-  if(phase==='shuffling') return false;
+  if(phase==='shuffling'||chargeInProgress) return false;
+  if(spreadCharged && revealed.size<count && !confirm(LL('สับชุดใหม่จะเริ่มการอ่านใหม่ โดยเครดิตรอบนี้จะไม่คืน ยืนยันไหม?','A new shuffle starts a new reading. Your current credit will not be refunded. Continue?')))return false;
   closeCardDetail();
 
   phase='shuffling';
+  readingId=newReadingId();spreadCharged=false;chargeInProgress=false;
   revealed.clear();
   drawn=drawDeck();
   renderSlots();
 
   shuffleButton.disabled=true;
   modeButtons.forEach(b=>b.disabled=true);
-  shuffleButton.querySelector('span').textContent='กำลังสับไพ่…';
-  statusText.textContent=count>=10?'นึกถึงภาพรวมของคำถาม แล้วค่อย ๆ วางใจไว้กับสำรับ':'นึกถึงคำถามของคุณสักครู่';
+  shuffleButton.querySelector('span').textContent=LL('กำลังสับไพ่…','Shuffling…');
+  statusText.textContent=LL('นึกถึงคำถามของคุณสักครู่','Hold your question in mind');
   slots.classList.add('shuffling');
 
   await new Promise(resolve=>setTimeout(resolve,matchMedia('(prefers-reduced-motion: reduce)').matches?120:1350));
@@ -279,27 +363,41 @@ async function shuffle(){
   phase='ready';
   shuffleButton.disabled=false;
   modeButtons.forEach(b=>b.disabled=false);
-  shuffleButton.querySelector('span').textContent='สับไพ่ใหม่';
+  shuffleButton.querySelector('span').textContent=LL('สับไพ่ใหม่','Shuffle again');
 
   [...slots.children].forEach((slot,i)=>{
     const btn=slot.querySelector('button');
     btn.disabled=false;
-    btn.setAttribute('aria-label',`เปิดไพ่ ${positionName(i)}`);
-    slot.querySelector('.card-hint').textContent='แตะเพื่อเปิดไพ่';
+    btn.setAttribute('aria-label',LL(`เปิดไพ่ ${positionName(i)}`,`Reveal ${positionName(i)}`));
+    slot.querySelector('.card-hint').textContent=LL('แตะเพื่อเปิดไพ่','Tap to reveal');
   });
 
-  statusText.textContent=count===1
-    ?'ไพ่พร้อมแล้ว แตะไพ่เพื่อเปิดคำตอบ'
-    :(count>=10?'แตะเพื่อพลิกไพ่ แล้วแตะไพ่ที่หงายอีกครั้งเพื่อดูภาพและคำอ่าน':`ไพ่พร้อมแล้ว ${count} ใบ · แตะเปิดทีละใบตามใจคุณ`);
+  statusText.textContent=LL('ไพ่พร้อมแล้ว · แตะเปิดไพ่ จากนั้นแตะอีกครั้งเพื่ออ่าน','Cards ready · Tap to reveal, then tap again to read');
 
   return true;
 }
 
-function revealCard(i){
+async function revealCard(i){
   if(!['ready','revealed'].includes(phase)||!Number.isInteger(i)||i<0||i>=count) return null;
   if(revealed.has(i)){
     if(count===10||count===12) openCardDetail(i);
     return null;
+  }
+
+  // Charge only once on the FIRST flip of this spread. No client-side balance authority.
+  if(!spreadCharged){
+    if(chargeInProgress) return null;
+    chargeInProgress=true;
+    try{
+      const ok=await window.MoonlitPlatform?.consumeReading({
+        id:readingId,spread:count,cards:drawn.map(c=>CARDS.indexOf(c))
+      });
+      if(ok===false) return null;
+      spreadCharged=true;
+    }catch(error){
+      statusText.textContent=LL('ไม่สามารถตรวจสอบเครดิตได้: ','Unable to verify credits: ')+(error.message||error);
+      return null;
+    }finally{chargeInProgress=false;}
   }
 
   const c=drawn[i];
@@ -323,16 +421,16 @@ function revealCard(i){
   button.disabled=!modalMode;
   button.setAttribute('aria-label',modalMode?`ดูภาพและความหมายไพ่ ${c.name} ${c.thai}`:c.name+' '+c.thai);
   button.setAttribute('aria-haspopup',modalMode?'dialog':'false');
-  slot.querySelector('.card-hint').textContent=modalMode?'แตะอีกครั้งเพื่ออ่าน':c.name;
+  slot.querySelector('.card-hint').textContent=modalMode?LL('แตะอีกครั้งเพื่ออ่าน','Tap again to read'):c.name;
 
   revealed.add(i);
   if(!modalMode) renderReading();
 
   if(revealed.size===count){
     phase='revealed';
-    statusText.textContent=count>=10?'เปิดครบแล้ว · แตะไพ่ใบใดก็ได้เพื่อดูภาพและความหมาย':'เปิดครบแล้ว ค่อย ๆ อ่านภาพรวม แล้วเลือกเก็บสิ่งที่มีความหมายกับคุณ';
+    statusText.textContent=LL('เปิดครบแล้ว · แตะไพ่เพื่อดูคำอ่าน','All cards revealed · Tap a card to read');
   }else{
-    statusText.textContent=count>=10?`เปิดแล้ว ${revealed.size}/${count} ใบ · แตะไพ่ที่หงายเพื่ออ่าน หรือเปิดไพ่ใบถัดไป`:`เปิดแล้ว ${revealed.size} จาก ${count} ใบ · แตะไพ่ที่เหลือได้เลย`;
+    statusText.textContent=LL(`เปิดแล้ว ${revealed.size}/${count} ใบ · แตะไพ่ที่หงายเพื่ออ่าน`,`Revealed ${revealed.size}/${count} · Tap a face-up card to read`);
   }
 
   return {position:positionName(i),name:c.name,thai:c.thai,meaning:c.meaning};
@@ -350,12 +448,12 @@ function renderReading(){
 
     if(!revealed.has(i)){
       article.classList.add('waiting');
-      article.textContent=positionName(i)+' · รอเปิดไพ่';
+      article.textContent=positionName(i)+' · '+LL('รอเปิดไพ่','Awaiting reveal');
     }else{
-      const c=drawn[i];
+      const c=cardCopy(drawn[i]);
       const prefix=count===1?'':positionName(i)+' · ';
       const houseDetail=count===12?`<p class="house-detail">${positionDetail(i)}</p>`:'';
-      const ageDetail=count===10?`<p class="age-detail">ช่วงอายุที่เกี่ยวข้อง: ${agePositions[i]}</p>`:'';
+      const ageDetail=count===10?`<p class="age-detail">${LL('ช่วงอายุที่เกี่ยวข้อง','Related ages')}: ${agePositions[i].replace('อายุ ','')}</p>`:'';
       article.innerHTML=`
         <div class="meaning-label">${prefix}${c.group}</div>
         <h2>${c.name}</h2>
@@ -370,9 +468,11 @@ function renderReading(){
   }
 }
 
+window.MoonlitCore={getState:()=>({count,phase,revealed:revealed.size,readingId,spreadCharged}),setCount,shuffle};
 modeButtons.forEach(b=>b.addEventListener('click',()=>setCount(Number(b.dataset.count))));
 shuffleButton.addEventListener('click',shuffle);
 renderSlots();
+updateLangUI();
 
 if(document.modelContext?.registerTool){
   const lifecycle=new AbortController();
@@ -420,7 +520,7 @@ if(document.modelContext?.registerTool){
       additionalProperties:false
     },
     annotations:{readOnlyHint:false,untrustedContentHint:false},
-    execute:input=>{
+    execute:async input=>{
       const ids=input?.positions;
       if(
         !Array.isArray(ids)||!ids.length||ids.length>count||
@@ -428,7 +528,7 @@ if(document.modelContext?.registerTool){
         ids.some(i=>!Number.isInteger(i)||i<1||i>count||revealed.has(i-1))||
         phase!=='ready'
       ) throw new Error('กรุณาสับไพ่และเลือกตำแหน่งที่ยังไม่เปิด');
-      return {cards:ids.map(i=>revealCard(i-1))};
+      const results=[];for(const i of ids)results.push(await revealCard(i-1));return {cards:results};
     }
   });
 }

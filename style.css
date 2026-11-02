@@ -523,3 +523,30 @@ footer a{color:#b5b6c7;text-underline-offset:3px}
   .cards.ten .card.flipped::after{width:21px;height:21px;font-size:17px;right:2px;bottom:2px}
   .cards.twelve .card.flipped::after{width:15px;height:15px;font-size:13px;right:0;bottom:0}
 }
+
+/* v2: bilingual & Supabase membership */
+header{gap:14px;flex-wrap:wrap}.header-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.nav-btn,.lang-switch button{border:1px solid #645a56;background:#1d2335;color:#ead9bd;padding:7px 11px;border-radius:8px;font-size:12px;min-height:39px}
+.lang-switch{display:flex;gap:2px}.lang-switch button[aria-pressed="true"]{background:var(--gold);color:#151b29}
+.setup-banner{max-width:980px;margin:12px auto 0;padding:10px 16px;border:1px solid #ad8a52;border-radius:9px;background:#2b2730;color:#f2d59e;font-size:13px;text-align:center}
+.service-dialog{position:fixed;inset:0;margin:auto;width:min(520px,calc(100% - 24px));max-height:90vh;overflow:auto;border:1px solid #776449;border-radius:14px;padding:22px;color:var(--ink);background:#171d2c;box-shadow:0 20px 80px #0009}
+.service-dialog::backdrop{background:#090d17dd;backdrop-filter:blur(4px)}
+.service-head{display:flex;justify-content:space-between;gap:12px;align-items:start;border-bottom:1px solid #534c49;padding-bottom:13px;margin-bottom:13px}
+.service-head h2{font-size:21px;font-weight:500;margin:0;color:#ead4ab}.x-close{border:1px solid #6b6073;color:#fff;background:#252d3e;border-radius:50%;width:38px;height:38px;min-width:38px}
+.service-muted{font-size:13px;color:#b9bfce;line-height:1.6}.service-status{font-size:13px;color:#e8c58d;min-height:20px}
+.service-tabs{display:flex;gap:8px;margin:14px 0}.service-tabs button{flex:1;padding:9px;border:1px solid #77654d;background:#1b2235;border-radius:6px;color:#d5c7b1}.service-tabs .selected{background:#bba178;color:#161b27}
+.service-form{display:grid;gap:13px}.service-form label{display:grid;gap:5px;font-size:13px;color:#ddd0b7}
+.service-form input,.admin-tools input,.chat-compose textarea{width:100%;border-radius:7px;background:#111827;color:#f4f1eb;padding:10px 12px;border:1px solid #4b5367;font:inherit;font-size:16px;min-width:0}
+.service-primary{border:1px solid #f3d6a8;background:var(--gold);color:#161b28;font-weight:600;padding:10px 16px;border-radius:8px;min-height:42px}
+.service-primary:disabled{opacity:.5;cursor:not-allowed}
+.credit-hero{text-align:center;font-size:18px;padding:18px 0}.credit-hero strong{font:38px Georgia,serif;color:var(--gold)}
+.credit-packs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}.credit-packs>div{border:1px solid #655b54;padding:14px;border-radius:9px;display:grid;gap:7px}.credit-packs span{font-size:12px;color:#b9bfce}
+.chat-dialog{width:min(780px,calc(100% - 16px))}.chat-policy{padding:10px;background:#202638;border-left:2px solid var(--gold);border-radius:4px;color:#c6c5d2;font-size:12px;margin:12px 0}
+.chat-messages{min-height:200px;max-height:360px;overflow-y:auto;border:1px solid #3b4254;background:#111625;border-radius:9px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.chat-bubble{max-width:86%;padding:10px 13px;border:1px solid #555a6c;border-radius:11px;background:#252d40;color:#f1e9dc;align-self:flex-start;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.6}
+.chat-bubble.mine{align-self:flex-end;background:#3a3540;border-color:#9a8062}.chat-bubble small{display:block;font-size:10px;opacity:.72;margin-top:4px}
+.chat-compose{display:flex;gap:9px;align-items:stretch;margin-top:10px}.chat-compose textarea{resize:vertical;min-height:52px}.chat-compose button{min-width:70px}
+.room-list{display:flex;gap:6px;overflow-x:auto;padding:8px 0 14px}.room-list button{white-space:nowrap;background:#20283a;border:1px solid #827052;border-radius:7px;color:#f4ead9;padding:8px 9px}.room-list button.selected{background:#554634}
+.admin-tools{display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end;margin:12px 0}.admin-tools h3{margin:0 auto 0 0;font-size:14px}.admin-tools label{display:grid;gap:4px;min-width:100px;flex:1;font-size:11px}.admin-tools button{background:#2b364e;border:1px solid #8d7959;border-radius:6px;padding:8px 10px;color:#ecd5aa;font-size:12px;min-height:38px}
+[hidden]{display:none!important}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:700px){header{padding:14px 12px;justify-content:center}.brand{margin-right:auto}.header-controls{justify-content:center;width:100%}.nav-btn{font-size:11px;padding:6px 8px}.service-dialog{padding:16px}.credit-packs{gap:8px}.chat-messages{max-height:290px}}

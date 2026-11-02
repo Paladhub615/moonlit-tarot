@@ -1,32 +1,43 @@
 <!doctype html>
 <html lang="th">
 <head>
-<!-- Moonlit Tarot · card popup build popup-20261102-b -->
+<!-- Moonlit Tarot v2 bilingual + secure Supabase membership/chat -->
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Moonlit Tarot · เปิดไพ่ทาโรต์ 78 ใบ</title>
+<title>Moonlit Tarot · ไพ่ทาโรต์ 78 ใบ / Tarot Reading</title>
 <meta name="description" content="ตั้งคำถามในใจ สับไพ่ทาโรต์ 78 ใบ แล้วเลือกเปิด 1 ใบ, 3 ใบ, ผังอายุ 10 ใบ หรือจักรราศี 12 เรือน พร้อมภาพไพ่และความหมายภาษาไทย">
 <meta name="theme-color" content="#101422">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23101422'/%3E%3Cpath d='M22 6a11 11 0 1 0 4 17A10 10 0 0 1 22 6' fill='%23e6c48e'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=popup-20261102-b">
-<script defer src="cards.js"></script><script defer src="app.js?v=popup-20261102-b"></script>
+<link rel="stylesheet" href="style.css?v=moonlit-v2-1">
+<script defer src="cards.js"></script>
+<script defer src="cards.en.js?v=moonlit-v2-1"></script>
+<script defer src="config.js?v=moonlit-v2-1"></script>
+<script defer src="app.js?v=moonlit-v2-1"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script defer src="platform.js?v=moonlit-v2-1"></script>
 </head>
 <body>
 <div class="ambient" aria-hidden="true"></div>
-<header><a class="brand" href="./" aria-label="Moonlit Tarot หน้าหลัก"><span class="brand-symbol">☾</span><span>MOONLIT <b>TAROT</b></span></a><span class="deck-note">THE COMPLETE DECK <span>78 ใบ</span></span></header>
+<header><a class="brand" href="./" aria-label="Moonlit Tarot หน้าหลัก"><span class="brand-symbol">☾</span><span>MOONLIT <b>TAROT</b></span></a><div class="header-controls">
+  <div class="lang-switch" role="group" aria-label="Language"><button type="button" data-lang="th" aria-pressed="true">TH</button><button type="button" data-lang="en" aria-pressed="false">EN</button></div>
+  <button type="button" id="auth-open" class="nav-btn">เข้าสู่ระบบ</button>
+  <button type="button" id="credits-open" class="nav-btn">✦ <span id="credit-count">—</span></button>
+  <button type="button" id="chat-open" class="nav-btn">☏ <span data-i18n="chat">แชทกับแม่หมอ</span></button>
+</div></header>
+<div id="setup-banner" class="setup-banner" hidden></div>
 <main>
-<div class="intro"><div class="eyebrow">A MOMENT FOR YOURSELF</div><h1>คืนนี้ ไพ่มีอะไรอยากบอกคุณ</h1><p>ตั้งคำถามในใจ แล้วให้ไพ่เป็นพื้นที่เล็ก ๆ สำหรับการทบทวน</p></div>
+<div class="intro"><div class="eyebrow">A MOMENT FOR YOURSELF</div><h1 data-i18n="hero">คืนนี้ ไพ่มีอะไรอยากบอกคุณ</h1><p data-i18n="intro">ตั้งคำถามในใจ แล้วให้ไพ่เป็นพื้นที่เล็ก ๆ สำหรับการทบทวน</p></div>
 
 <div class="mode" role="group" aria-label="จำนวนไพ่">
-  <button type="button" data-count="1" aria-pressed="true"><span class="mode-icon">Ⅰ</span> เปิด 1 ใบ <small>ข้อความสำหรับคุณ</small></button>
-  <button type="button" data-count="3" aria-pressed="false"><span class="mode-icon">Ⅲ</span> เปิด 3 ใบ <small>อดีต · ปัจจุบัน · แนวโน้ม</small></button>
-  <button type="button" data-count="10" aria-pressed="false"><span class="mode-icon">Ⅹ</span> เปิด 10 ใบ <small>ผังอายุ · วงจรชีวิต</small></button>
-  <button type="button" data-count="12" aria-pressed="false"><span class="mode-icon">Ⅻ</span> เปิด 12 ใบ <small>จักรราศี · 12 เรือนชีวิต</small></button>
+  <button type="button" data-count="1" aria-pressed="true"><span class="mode-icon">Ⅰ</span> <span data-i18n="mode1">เปิด 1 ใบ</span> <small data-i18n="mode1s">ข้อความสำหรับคุณ</small></button>
+  <button type="button" data-count="3" aria-pressed="false"><span class="mode-icon">Ⅲ</span> <span data-i18n="mode3">เปิด 3 ใบ</span> <small data-i18n="mode3s">อดีต · ปัจจุบัน · แนวโน้ม</small></button>
+  <button type="button" data-count="10" aria-pressed="false"><span class="mode-icon">Ⅹ</span> <span data-i18n="mode10">เปิด 10 ใบ</span> <small data-i18n="mode10s">ผังอายุ · วงจรชีวิต</small></button>
+  <button type="button" data-count="12" aria-pressed="false"><span class="mode-icon">Ⅻ</span> <span data-i18n="mode12">เปิด 12 ใบ</span> <small data-i18n="mode12s">จักรราศี · 12 เรือนชีวิต</small></button>
 </div>
 
 <div class="table-top"><span class="fine-line"></span><span id="spread-title">ONE-CARD READING</span><span class="fine-line"></span></div>
 <section id="cards" class="cards one" aria-label="ไพ่ที่เลือก"></section>
 
-<div class="actions"><p id="status" role="status" aria-live="polite">หายใจเข้าลึก ๆ แล้วกดสับไพ่เมื่อพร้อม</p><button id="shuffle" class="shuffle" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7h3c5 0 7 10 12 10h3m-4-4 4 4-4 4M3 17h3c2 0 3.4-1.5 5-4M13 9c1.6-2 3-2 5-2h3m-4-4 4 4-4 4"/></svg><span>สับไพ่</span></button><div class="deck-caption">78 ใบ <span>✦</span> เปิดไพ่ตั้งตรง</div></div>
+<div class="actions"><p id="status" role="status" aria-live="polite">หายใจเข้าลึก ๆ แล้วกดสับไพ่เมื่อพร้อม</p><button id="shuffle" class="shuffle" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7h3c5 0 7 10 12 10h3m-4-4 4 4-4 4M3 17h3c2 0 3.4-1.5 5-4M13 9c1.6-2 3-2 5-2h3m-4-4 4 4-4 4"/></svg><span>สับไพ่</span></button><div class="deck-caption" data-i18n="deckcaption">78 ใบ ✦ เปิดไพ่ตั้งตรง</div></div>
 <section id="reading" class="reading" aria-label="ความหมายของไพ่" hidden></section>
 </main>
 
@@ -42,13 +53,47 @@
         <p id="dialog-thai-name" class="dialog-thai-name"></p>
         <div id="dialog-context" class="dialog-context" hidden></div>
         <p id="dialog-keywords" class="dialog-keywords"></p>
-        <h3 class="dialog-subhead">ความหมายไพ่</h3>
+        <h3 class="dialog-subhead" data-i18n="interpretation">ความหมายไพ่</h3>
         <p id="dialog-card-meaning" class="dialog-card-meaning"></p>
       </div>
     </div>
-    <nav class="dialog-nav" aria-label="ดูไพ่ที่เปิดแล้ว"><button type="button" id="dialog-prev">← ใบก่อนหน้า</button><span id="dialog-counter" aria-live="polite"></span><button type="button" id="dialog-next">ใบถัดไป →</button></nav>
+    <nav class="dialog-nav" aria-label="ดูไพ่ที่เปิดแล้ว"><button type="button" id="dialog-prev"><span data-i18n="prev">← ใบก่อนหน้า</span></button><span id="dialog-counter" aria-live="polite"></span><button type="button" id="dialog-next"><span data-i18n="next">ใบถัดไป →</span></button></nav>
   </div>
 </dialog>
 
-<footer><p>สำหรับความบันเทิงและการทบทวนใจ ไม่ใช่คำทำนายที่แน่นอน</p><div><span>MOONLIT TAROT</span><span>ภาพ Rider–Waite–Smith · Pamela Colman Smith, 1909 · <a href="https://github.com/sixseeds/tarot-api" target="_blank" rel="noopener noreferrer">ที่มาภาพไพ่</a></span></div></footer>
+
+<!-- Auth, credits and human-reader chat; activated after Supabase setup. -->
+<dialog id="auth-dialog" class="service-dialog" aria-labelledby="auth-title">
+ <div class="service-head"><h2 id="auth-title" data-i18n="loginTitle">เข้าสู่ระบบ Moonlit</h2><button type="button" class="x-close" data-close="auth-dialog" aria-label="Close">✕</button></div>
+ <p class="service-muted" data-i18n="authHint">สมัครบัญชีเพื่อรับเครดิตฟรี 5 ครั้ง (ครั้งเดียวต่อบัญชี)</p>
+ <div class="service-tabs"><button type="button" id="signin-tab" class="selected" data-i18n="signin">เข้าสู่ระบบ</button><button type="button" id="signup-tab" data-i18n="signup">สมัครสมาชิก</button></div>
+ <form id="auth-form" class="service-form">
+  <label><span data-i18n="email">อีเมล</span><input type="email" id="auth-email" autocomplete="email" required maxlength="254"></label>
+  <label><span data-i18n="password">รหัสผ่าน (อย่างน้อย 6 ตัว)</span><input type="password" id="auth-password" autocomplete="current-password" minlength="6" required></label>
+  <button class="service-primary" id="auth-submit" type="submit" data-i18n="signin">เข้าสู่ระบบ</button>
+ </form><p id="auth-message" role="status" class="service-status"></p>
+</dialog>
+<dialog id="credits-dialog" class="service-dialog" aria-labelledby="credits-title">
+ <div class="service-head"><h2 id="credits-title" data-i18n="creditTitle">เครดิตการเปิดไพ่</h2><button type="button" class="x-close" data-close="credits-dialog" aria-label="Close">✕</button></div>
+ <div class="credit-hero">✦ <strong id="credit-detail">—</strong> <span data-i18n="creditsUnit">เครดิต</span></div>
+ <p class="service-muted" data-i18n="creditHint">สมาชิกใหม่ได้ 5 ครั้งฟรี · เปิด 1 รอบใช้ 1 เครดิต ไม่ว่าจะวางกี่ใบ · หักเมื่อพลิกใบแรก</p>
+ <div class="credit-packs"><div><strong>10 Credits</strong><span data-i18n="priceSoon">เปิดราคาเร็ว ๆ นี้</span></div><div><strong>30 Credits</strong><span data-i18n="priceSoon">เปิดราคาเร็ว ๆ นี้</span></div></div>
+ <p class="service-muted" data-i18n="manualTopup">ระบบชำระเงินอัตโนมัติยังไม่เปิดใช้งาน ติดต่อแม่หมอเพื่อสอบถามการเติมเครดิต (ตรวจสอบยอดก่อนเพิ่มเครดิต)</p>
+ <button type="button" id="credits-to-chat" class="service-primary" data-i18n="contactReader">ติดต่อแม่หมอ</button>
+</dialog>
+<dialog id="chat-dialog" class="service-dialog chat-dialog" aria-labelledby="chat-title">
+ <div class="service-head"><div><h2 id="chat-title" data-i18n="chatTitle">พูดคุยกับแม่หมอ ☾</h2><p id="chat-state" class="service-muted"></p></div><button type="button" class="x-close" data-close="chat-dialog" aria-label="Close">✕</button></div>
+ <p data-i18n="welcomePolicy" class="chat-policy">ทักทายและสอบถามบริการได้ฟรี · คำอ่านดวงส่วนตัวแบบชำระเงินยังไม่เปิดอัตโนมัติ · แม่หมอตอบด้วยตัวเองเมื่อออนไลน์</p>
+ <div id="chat-admin" hidden>
+   <div class="admin-tools"><h3 data-i18n="inbox">กล่องข้อความลูกค้า</h3><button type="button" id="reload-rooms" data-i18n="reload">รีเฟรช</button><button type="button" id="room-open" data-i18n="reopenRoom">เปิดห้องแชท</button><button type="button" id="room-close" data-i18n="closeRoom">ปิดห้องแชท</button></div>
+   <div id="room-list" class="room-list"></div>
+   <div class="admin-tools"><label><span data-i18n="customerId">รหัสบัญชีลูกค้า</span><input id="topup-user-id" type="text" placeholder="Customer UUID"></label><label><span data-i18n="topupAmount">จำนวนเครดิต</span><input id="topup-amount" type="number" min="1" max="1000" value="10"></label><button type="button" id="grant-credits" data-i18n="grant">เพิ่มเครดิตหลังตรวจยอด</button></div>
+ </div>
+ <div id="chat-thread-title" class="service-muted"></div>
+ <div id="chat-messages" class="chat-messages" role="log" aria-live="polite"><p class="service-muted" data-i18n="startChat">เข้าสู่ระบบเพื่อเริ่มแชท</p></div>
+ <form id="chat-form" class="chat-compose"><label class="sr-only" for="chat-text" data-i18n="chatInput">ข้อความ</label><textarea id="chat-text" maxlength="2000" rows="2" placeholder="พิมพ์ข้อความ…" required></textarea><button type="submit" id="chat-send" class="service-primary" data-i18n="send">ส่ง</button></form>
+ <p id="chat-message-status" class="service-status" role="status"></p>
+</dialog>
+
+<footer><p data-i18n="disclaimer">สำหรับความบันเทิงและการทบทวนใจ ไม่ใช่คำทำนายที่แน่นอน</p><div><span>MOONLIT TAROT</span><span><span data-i18n="imageCredit">ภาพ Rider–Waite–Smith · Pamela Colman Smith, 1909 ·</span> <a href="https://github.com/sixseeds/tarot-api" target="_blank" rel="noopener noreferrer" data-i18n="imageSource">ที่มาภาพไพ่</a></span></div></footer>
 </body></html>
